@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magical Bakery</title>
+<style>
+:root{--cream:#fff9f0;--pink:#ff8da1;--pinklight:#ffd1dc;--mint:#a8e6cf;--brown:#5c4033;--lav:#d291bc;--yellow:#ffd3b6;--ink:#3e2723;--white:#fff;--shadow:4px 4px 0 var(--ink)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background-color:var(--cream);background-image:radial-gradient(var(--pinklight) 14%,transparent 15%),radial-gradient(var(--mint) 14%,transparent 15%);background-size:32px 32px;background-position:0 0,16px 16px;font-family:system-ui,'Trebuchet MS',sans-serif;color:var(--ink);display:flex;justify-content:center;align-items:center;padding:12px}
+button{font:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible{outline:4px solid #356ac3;outline-offset:3px}
+#game{width:min(920px,100%);height:min(780px,calc(100dvh - 24px));min-height:610px;background:var(--white);border:5px solid var(--ink);border-radius:20px;box-shadow:8px 8px 0 var(--brown);position:relative;overflow:hidden}
+.screen{display:none;position:absolute;inset:0;padding:20px;background:var(--cream);overflow:auto}.screen.active{display:flex;flex-direction:column}
+.pixel{font-family:monospace;font-weight:900;letter-spacing:.5px;text-transform:uppercase;text-shadow:2px 2px 0 var(--pinklight)}
+.btn{border:3px solid var(--ink);border-radius:12px;background:var(--pink);color:white;padding:12px 16px;font-weight:900;box-shadow:var(--shadow);transition:transform .08s,box-shadow .08s}.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}.mint{background:var(--mint);color:var(--ink)}.lav{background:var(--lav);color:white}.yellow{background:var(--yellow);color:var(--ink)}.small{font-size:.85rem;padding:8px 10px;box-shadow:2px 2px 0 var(--ink)}
+#home{justify-content:center;align-items:center;text-align:center;background:linear-gradient(140deg,var(--cream),var(--pinklight))}
+.logo{font-size:clamp(1.6rem,5vw,2.7rem);margin:0 0 8px}.subtitle{font-weight:800;color:var(--brown)}.hero{font-size:clamp(3.5rem,12vw,6rem);margin:16px 0;filter:drop-shadow(3px 3px 0 white);image-rendering:pixelated}.menu{display:grid;gap:13px;width:min(320px,100%);margin:16px auto}.foot{font-size:.8rem;font-weight:800;margin-top:18px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:3px dashed var(--brown);padding-bottom:12px;margin-bottom:14px}.badge{background:var(--yellow);border:3px solid var(--ink);border-radius:9px;padding:7px 10px;font-weight:900;font-size:.85rem}
+.customer{display:flex;align-items:center;gap:12px;background:white;border:3px solid var(--ink);border-radius:14px;padding:10px;margin-bottom:14px;box-shadow:2px 2px 0 var(--ink)}.avatar{width:54px;height:54px;flex-shrink:0;border:3px solid var(--ink);border-radius:50%;display:grid;place-items:center;background:var(--pinklight);font-size:2rem}.speech{font-weight:800;line-height:1.35}
+.question{background:white;border:4px solid var(--ink);border-radius:15px;padding:18px 12px;text-align:center;font-size:clamp(1.1rem,3.4vw,1.6rem);font-weight:900;line-height:1.5;box-shadow:var(--shadow);margin-bottom:10px}.blank{display:inline-block;color:#e44d70;border-bottom:4px dashed var(--pink);min-width:95px}
+.feedback{min-height:46px;text-align:center;font-weight:900;padding:8px 4px;color:var(--brown)}
+.ingredients{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:auto}.ingredient{min-width:0;min-height:125px;border:3px solid var(--ink);border-radius:14px;background:white;box-shadow:var(--shadow);padding:10px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}.ingredient:hover{background:#fff0f4}.ingredient:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}.ingredient:disabled{opacity:.5;cursor:not-allowed}.foodicon{font-size:2.2rem}.foodlabel{font-weight:1000;font-size:clamp(.8rem,2.6vw,1rem);overflow-wrap:anywhere}
+.center{align-items:center;justify-content:center;text-align:center;gap:14px}.kitchen{width:min(320px,90%);height:190px;border:5px solid var(--ink);border-radius:16px;background:repeating-linear-gradient(0deg,#b97b4c,#b97b4c 20px,#c98a57 20px,#c98a57 40px);display:grid;place-items:center;box-shadow:var(--shadow);position:relative;overflow:hidden}.bowl{font-size:5rem;animation:wiggle .4s infinite alternate}.oven{font-size:5rem;display:none;animation:pulse .7s infinite alternate}.sparkles{font-size:2rem;animation:pulse .4s infinite alternate}@keyframes wiggle{to{transform:rotate(8deg)}}@keyframes pulse{to{transform:scale(1.12)}}
+.rewardcard{width:min(430px,100%);background:white;border:5px solid var(--ink);border-radius:18px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px}.rarity{font-weight:1000;border:2px solid var(--ink);border-radius:8px;padding:6px 10px;font-size:.8rem;text-transform:uppercase}.Common{background:#e0e0e0;color:#424242}.Rare{background:#64b5f6;color:#0d47a1}.Epic{background:#ce93d8;color:#4a148c}.Legendary{background:#ffd54f;color:#7a4b00}.dessertbig{width:125px;height:125px;background:var(--cream);border:4px solid var(--ink);border-radius:15px;display:grid;place-items:center;font-size:4.6rem;box-shadow:2px 2px 0 var(--ink)}.dessert-art{position:relative;display:inline-grid;place-items:center;line-height:1}.dessert-base{display:block}.dessert-topping{position:absolute;right:-.08em;top:-.16em;font-size:.43em;filter:drop-shadow(1px 1px 0 white);transform:rotate(10deg)}.slot .dessert-art{font-size:2rem}.slot .dessert-topping{font-size:.72em;right:-.12em;top:-.16em}.dessertname{font-weight:1000;font-size:1.2rem}.muted{color:#795548;font-weight:800;font-size:.9rem}.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%}.row .btn{flex:1;min-width:130px}
+.tabs{display:flex;gap:7px;overflow-x:auto;padding:5px 3px 12px}.tab{border:3px solid var(--ink);border-radius:8px;background:white;padding:9px 12px;font-weight:900;white-space:nowrap;flex:0 0 auto}.tab.active{background:var(--pink);color:white}
+.collectiongrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:9px;overflow:auto;padding:5px 3px;align-content:start}.slot{border:3px solid var(--ink);border-radius:10px;background:white;min-height:105px;padding:7px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;position:relative}.slot.locked{background:#e8e4e1;color:#888}.slot .emoji{font-size:2rem}.slot .name{font-size:.72rem;font-weight:900;line-height:1.15}.count{position:absolute;right:3px;bottom:3px;background:var(--brown);color:white;border-radius:4px;padding:2px 4px;font-size:.65rem;font-weight:900}
+.statsgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.stat{background:white;border:3px solid var(--ink);border-radius:12px;padding:14px;box-shadow:2px 2px 0 var(--ink)}.stat h3{font-size:.8rem;margin:0 0 8px;color:var(--brown)}.stat strong{font-size:1.5rem}.chips{display:flex;gap:7px;flex-wrap:wrap}.chip{background:var(--pinklight);border:2px solid var(--ink);border-radius:7px;padding:5px 8px;font-weight:900;font-size:.85rem}
+.review-list{display:grid;gap:10px;padding:3px 2px 12px;min-height:0;overflow-y:auto;overscroll-behavior:contain;align-content:start}.screen#review{overflow:hidden}.screen#review.active{display:flex;flex-direction:column}.screen#review .header,.screen#review>p,.screen#review .tabs{flex-shrink:0}.screen#review .tabs{position:sticky;top:0;z-index:4;background:var(--cream);padding:8px 3px 12px}.screen#review .review-list{flex:1 1 auto;min-height:0}.review-card{background:#fff;border:3px solid var(--ink);border-radius:12px;padding:12px;box-shadow:2px 2px 0 var(--ink);display:grid;gap:8px}.review-card h3{margin:0;font-size:1rem;line-height:1.6}.review-blank{display:inline-block;min-width:58px;border-bottom:2px dashed var(--pink);text-align:center}.review-blank.answer-highlight{border-bottom-color:#d7193f}.review-card p{margin:0;font-weight:800}.base-verb-cue{display:inline-block;color:#3e2723;background:#fff0b3;border:3px solid #5c4033;border-radius:10px;padding:6px 11px;margin:8px 4px 0;font-size:1.02em;line-height:1.25;font-weight:1000;white-space:normal;box-shadow:2px 2px 0 #5c4033}.typing-answer-highlight{color:#d7193f!important;font-weight:1000;text-decoration:underline;text-decoration-thickness:2px}.answer-highlight{color:#d7193f!important;font-weight:1000;text-decoration:underline;text-decoration-thickness:2px}.ingredient.answer-highlight{border-color:#d7193f!important;background:#ffe0e6!important;color:#b00020!important;box-shadow:0 0 0 3px #ff9caf!important}.review-delete-row{display:block!important;width:100%;margin:2px 0 4px}.review-delete-button{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:2!important;width:100%!important;min-height:58px!important;margin:6px 0!important;padding:14px!important;background:#ffd6df!important;border:3px solid #c90032!important;border-radius:10px!important;color:#8b001f!important;font-size:1rem!important;font-weight:1000!important;box-shadow:2px 2px 0 #8b001f!important;cursor:pointer!important}.review-actions{display:flex;gap:8px;flex-wrap:wrap}.review-actions .btn{flex:1;min-width:110px}.typing-input{width:100%;border:3px solid var(--ink);border-radius:10px;padding:13px;font:inherit;font-weight:900;font-size:1.1rem}.review-empty{background:#fff;border:2px dashed var(--pink);padding:14px;border-radius:10px;font-weight:800;text-align:center}.sound-controls{position:absolute;top:10px;right:10px;z-index:2;display:grid;gap:7px;justify-items:end}.sound-toggle{position:static}.guide-launch{background:var(--mint);color:var(--ink)}
+.tutorial-overlay{position:absolute;inset:0;background:rgba(15,22,35,.015);z-index:20;display:none;pointer-events:none}
+.tutorial-overlay.show{display:block}
+.tutorial-card{position:absolute;width:min(440px,calc(100% - 24px));max-height:42dvh;overflow:auto;background:rgba(255,250,239,.99);border:3px solid #76503a;border-radius:18px;padding:16px 18px;text-align:left;box-shadow:0 4px 0 #3e2a20,0 7px 18px #0004;pointer-events:auto}
+.tutorial-card.pos-tr{top:8px;right:8px}.tutorial-card.pos-tl{top:8px;left:8px}.tutorial-card.pos-br{bottom:8px;right:8px}.tutorial-card.pos-bl{bottom:8px;left:8px}.tutorial-card.answer-step{bottom:auto;top:8px;left:50%;right:auto;transform:translateX(-50%);width:min(330px,calc(100% - 16px));max-height:15dvh;overflow:auto;padding:6px 9px}.tutorial-card.answer-step .tutorial-npc-row{margin-bottom:5px}.tutorial-card.answer-step .bunny-npc{width:30px;height:30px;flex-basis:30px}.tutorial-card.answer-step .bunny-npc-face{font-size:1.1rem}.tutorial-card.answer-step .tutorial-message{font-size:.84rem;line-height:1.2;margin:2px 0}.tutorial-card.answer-step .tutorial-message .tutorial-zh-line{font-size:.9em;line-height:1.2;margin-top:2px}.tutorial-card.answer-step .tutorial-step{margin-top:3px}.tutorial-card.answer-step .tutorial-actions{margin-top:3px}.tutorial-card.answer-step .tutorial-actions .btn{padding:6px 9px;min-width:90px;font-size:.82rem}
+.tutorial-npc-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}.bunny-npc{position:static;flex:0 0 48px;width:48px;height:48px;display:grid;place-items:center;background:#fff0d9;border:3px solid #76503a;border-radius:50%;box-shadow:0 2px 0 #3e2a20}.bunny-npc-face{font-size:1.8rem;line-height:1}.bunny-npc-name{font-weight:1000;color:#74452e;font-size:1rem}.tutorial-message{font-size:1.12rem;font-weight:800;line-height:1.65;margin:5px 0 12px;overflow-wrap:anywhere}.tutorial-message .tutorial-zh-line{display:block;margin-top:7px;font-size:1.08em;line-height:1.7}.tutorial-button-name{display:inline-block;background:#ffe49a;color:#5b351e;border:1.5px solid #b87925;border-radius:5px;padding:0 4px;font-weight:1000;white-space:normal}
+.tutorial-card.story-page{max-height:58dvh}.tutorial-actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}.tutorial-actions .btn{flex:0 1 auto;min-width:110px;padding:10px 13px;font-size:.95rem}.tutorial-step{font-size:.85rem;color:#795548;font-weight:900;margin-top:8px}.tutorial-highlight{outline:4px solid #ffcf36!important;outline-offset:4px;position:relative;z-index:23!important;filter:drop-shadow(0 0 7px #fff) drop-shadow(0 0 5px #ffb000)}
+@media(max-width:600px){.screen#review .tabs{overflow-x:auto;scrollbar-width:thin}.screen#review .tab{font-size:.78rem;padding:8px 9px}.screen#review .review-list{padding-bottom:24px}.tutorial-card{width:min(370px,calc(100% - 16px));max-height:40dvh;padding:13px 14px}.tutorial-card.story-page{max-height:58dvh}.tutorial-message{font-size:1.05rem;margin:7px 0}.tutorial-message .tutorial-zh-line{font-size:1.04em}.tutorial-actions{margin-top:10px}.tutorial-npc-row{gap:8px;margin-bottom:10px}.bunny-npc-name{font-size:.95rem}}
+.modal{position:absolute;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:18px;z-index:5}.modal.show{display:flex}.modalbox{max-width:340px;width:100%;padding:20px;background:white;border:5px solid var(--ink);border-radius:15px;text-align:center;box-shadow:var(--shadow)}.modalbox h2{margin-bottom:12px}.modalbox p{margin-bottom:15px;font-weight:800}
+@media(max-width:600px){.tutorial-card{width:min(370px,calc(100% - 16px));max-height:40dvh;padding:13px 14px}.tutorial-message{font-size:1.05rem;margin:7px 0}.tutorial-message .tutorial-zh-line{font-size:1.04em}.tutorial-actions{margin-top:10px}.tutorial-npc-row{gap:8px;margin-bottom:10px}body{padding:0}#game{height:100dvh;min-height:0;border:0;border-radius:0;box-shadow:none}.screen{padding:14px}.header{margin-bottom:10px}.customer{padding:8px}.question{padding:13px 8px}.ingredient{min-height:110px}.collectiongrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-height:680px){#game{height:100dvh;min-height:0}.screen{padding:12px}.hero{margin:8px}.customer{margin-bottom:8px}.question{padding:10px;margin-bottom:4px}.ingredients{gap:7px}.ingredient{min-height:90px;padding:6px}.foodicon{font-size:1.8rem}}
+</style>
+</head>
+<body>
+<div id="game">
+  <section id="home" class="screen active">
+    <div class="sound-controls">
+      <button class="btn small sound-toggle" id="sound-btn" aria-pressed="true">🔊 Sound On</button>
+      <button class="btn small sound-toggle guide-launch" id="guide-btn" type="button">📘 Beginner's Guide</button>
+    </div>
+    <div>
+      <h1 class="pixel logo">Magical Bakery</h1>
+      <div class="subtitle">A LITTLE MAGIC, A LOT OF DESSERTS!</div>
+      <div class="hero" aria-hidden="true">🧁✨🍪</div>
+      <p><strong>Help the animals bring their lost dessert recipes back to life!</strong></p>
+      <div class="menu">
+        <button class="btn" id="start-btn">🧁 Start Baking</button>
+        <button class="btn mint" id="collection-btn">📖 Dessert Collection</button>
+        <button class="btn lav" id="progress-btn">⭐ Learning Stats</button>
+        <button class="btn yellow" id="review-btn">📝 Review Mistakes</button>
+      </div>
+      <div class="foot">100 desserts to discover • Every bake is a chance to learn!</div>
+    </div>
+  </section>
+
+  <section id="baking" class="screen">
+    <div class="header"><button class="btn small" data-screen="home">← Home</button><div class="badge" id="bake-count">Unique: 0/100</div></div>
+    <div class="customer"><div class="avatar" id="customer-avatar">🐰</div><div class="speech" id="customer-speech">Hi, little baker! Let's make something sweet!</div></div>
+    <div class="question" id="question-text">Yesterday, I <span class="blank">___</span> a cake.</div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <button class="btn yellow" id="bake-after-mistake-btn" type="button" hidden>I understand — Bake Anyway 🧁</button>
+    <div class="ingredients" id="ingredients"></div>
+  </section>
+
+  <section id="typing" class="screen center">
+    <div class="header" style="width:100%"><button class="btn small" id="typing-home-btn">← Home</button><div class="badge" id="typing-count">Verb Challenge</div></div>
+    <h2 class="pixel">Quick Verb Check!</h2>
+    <div class="question" id="typing-question">Yesterday, I <span class="blank">___</span> my room.</div>
+    <form id="typing-form" style="width:min(420px,100%);display:grid;gap:10px">
+      <label for="typing-answer"><strong>Your answer</strong></label>
+      <input class="typing-input" id="typing-answer" autocomplete="off" autocapitalize="off" placeholder="Type the past tense..." required>
+      <button class="btn" type="submit">Check Answer</button>
+    </form>
+    <div class="feedback" id="typing-feedback" aria-live="polite"></div>
+    <button class="btn mint" id="typing-continue-btn" hidden>Continue Baking 🧁</button>
+  </section>
+
+  <section id="review" class="screen">
+    <div class="header"><button class="btn small" data-screen="home">← Home</button><strong class="pixel">Review Center</strong></div>
+    <p class="muted">Practice mistakes, reveal answers, and move mastered questions into your collection here.</p>
+    <div class="tabs" id="review-tabs">
+      <button class="tab active" data-review-tab="notMastered">Not Mastered <span id="not-mastered-count">0</span></button>
+      <button class="tab" data-review-tab="mastered">Mastered <span id="mastered-count">0</span></button>
+    </div>
+    <div class="review-list" id="review-list"></div>
+  </section>
+
+  <section id="animation" class="screen center">
+    <h2 class="pixel" id="animation-title">Baking in progress!</h2>
+    <p id="animation-caption" class="muted">Mixing the ingredients...</p>
+    <div class="kitchen"><div class="bowl" id="bowl">🥣</div><div class="oven" id="oven">🔥</div></div>
+    <div class="sparkles">✨ 🍓 ✨</div>
+  </section>
+
+  <section id="reward" class="screen center">
+    <div class="header" style="width:100%;align-self:stretch"><button class="btn small" data-screen="home">← Home</button><span aria-hidden="true"></span></div>
+    <div class="rewardcard">
+      <div class="rarity Epic" id="reward-rarity">EPIC</div>
+      <div class="dessertbig" id="reward-emoji">🍰</div>
+      <div class="dessertname" id="reward-name">Strawberry Shortcake</div>
+      <div class="muted" id="reward-status">New dessert unlocked!</div>
+      <div id="legendary-note" hidden class="pixel" style="font-size:.7rem;color:#a56a00">✨ HIDDEN LEGENDARY BONUS! ✨</div>
+      <div class="row"><button class="btn" id="next-btn">Next Bake 🧁</button><button class="btn mint" id="view-btn">View Collection 📖</button><button class="btn yellow" id="return-review-btn" hidden>← Back to Review Center</button></div>
+    </div>
+  </section>
+
+  <section id="collection" class="screen">
+    <div class="header"><button class="btn small" data-screen="home">← Home</button><div><strong class="pixel">My Collection</strong><div class="muted" id="collection-total">0/100 collected</div></div></div>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tier="Common">Common 0/30</button>
+      <button class="tab" data-tier="Rare">Rare 0/30</button>
+      <button class="tab" data-tier="Epic">Epic 0/30</button>
+      <button class="tab" data-tier="Legendary">Legendary 0/10</button>
+    </div>
+    <div class="collectiongrid" id="collection-grid"></div>
+    <p class="muted" style="margin-top:10px">Duplicates are allowed. Only new designs increase your collection progress.</p>
+  </section>
+
+  <section id="progress" class="screen">
+    <div class="header"><button class="btn small" data-screen="home">← Home</button><strong class="pixel">Learning Stats</strong></div>
+    <div class="statsgrid">
+      <div class="stat"><h3>BAKING ROUNDS</h3><strong id="stat-rounds">0</strong></div>
+      <div class="stat"><h3>FIRST-TRY CORRECT</h3><strong id="stat-first">0</strong></div>
+      <div class="stat"><h3>SECOND-TRY CORRECT</h3><strong id="stat-second">0</strong></div>
+   
