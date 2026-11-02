@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magical Bakery</title>
+<style>
+:root{--cream:#fff9f0;--pink:#ff8da1;--pinklight:#ffd1dc;--mint:#a8e6cf;--brown:#5c4033;--lav:#d291bc;--yellow:#ffd3b6;--ink:#3e2723;--white:#fff;--shadow:4px 4px 0 var(--ink)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background-color:var(--cream);background-image:radial-gradient(var(--pinklight) 14%,transparent 15%),radial-gradient(var(--mint) 14%,transparent 15%);background-size:32px 32px;background-position:0 0,16px 16px;font-family:system-ui,'Trebuchet MS',sans-serif;color:var(--ink);display:flex;justify-content:center;align-items:center;padding:12px}
+button{font:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible{outline:4px solid #356ac3;outline-offset:3px}
+#game{width:min(920px,100%);height:min(780px,calc(100dvh - 24px));min-height:610px;background:var(--white);border:5px solid var(--ink);border-radius:20px;box-shadow:8px 8px 0 var(--brown);position:relative;overflow:hidden}
+.screen{display:none;position:absolute;inset:0;padding:20px;background:var(--cream);overflow:auto}.screen.active{display:flex;flex-direction:column}
+.pixel{font-family:monospace;font-weight:900;letter-spacing:.5px;text-transform:uppercase;text-shadow:2px 2px 0 var(--pinklight)}
+.btn{border:3px solid var(--ink);border-radius:12px;background:var(--pink);color:white;padding:12px 16px;font-weight:900;box-shadow:var(--shadow);transition:transform .08s,box-shadow .08s}.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}.mint{background:var(--mint);color:var(--ink)}.lav{background:var(--lav);color:white}.yellow{background:var(--yellow);color:var(--ink)}.small{font-size:.85rem;padding:8px 10px;box-shadow:2px 2px 0 var(--ink)}
+#home{justify-content:center;align-items:center;text-align:center;background:linear-gradient(140deg,var(--cream),var(--pinklight))}
+.logo{font-size:clamp(1.6rem,5vw,2.7rem);margin:0 0 8px}.subtitle{font-weight:800;color:var(--brown)}.hero{font-size:clamp(3.5rem,12vw,6rem);margin:16px 0;filter:drop-shadow(3px 3px 0 white);image-rendering:pixelated}.menu{display:grid;gap:13px;width:min(320px,100%);margin:16px auto}.foot{font-size:.8rem;font-weight:800;margin-top:18px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:3px dashed var(--brown);padding-bottom:12px;margin-bottom:14px}.badge{background:var(--yellow);border:3px solid var(--ink);border-radius:9px;padding:7px 10px;font-weight:900;font-size:.85rem}
+.customer{display:flex;align-items:center;gap:12px;background:white;border:3px solid var(--ink);border-radius:14px;padding:10px;margin-bottom:14px;box-shadow:2px 2px 0 var(--ink)}.avatar{width:54px;height:54px;flex-shrink:0;border:3px solid var(--ink);border-radius:50%;display:grid;place-items:center;background:var(--pinklight);font-size:2rem}.speech{font-weight:800;line-height:1.35}
+.question{background:white;border:4px solid var(--ink);border-radius:15px;padding:18px 12px;text-align:center;font-size:clamp(1.1rem,3.4vw,1.6rem);font-weight:900;line-height:1.5;box-shadow:var(--shadow);margin-bottom:10px}.blank{display:inline-block;color:#e44d70;border-bottom:4px dashed var(--pink);min-width:95px}
+.feedback{min-height:46px;text-align:center;font-weight:900;padding:8px 4px;color:var(--brown)}
+.ingredients{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:auto}.ingredient{min-width:0;min-height:125px;border:3px solid var(--ink);border-radius:14px;background:white;box-shadow:var(--shadow);padding:10px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}.ingredient:hover{background:#fff0f4}.ingredient:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}.ingredient:disabled{opacity:.5;cursor:not-allowed}.foodicon{font-size:2.2rem}.foodlabel{font-weight:1000;font-size:clamp(.8rem,2.6vw,1rem);overflow-wrap:anywhere}
+.center{align-items:center;justify-content:center;text-align:center;gap:14px}.kitchen{width:min(320px,90%);height:190px;border:5px solid var(--ink);border-radius:16px;background:repeating-linear-gradient(0deg,#b97b4c,#b97b4c 20px,#c98a57 20px,#c98a57 40px);display:grid;place-items:center;box-shadow:var(--shadow);position:relative;overflow:hidden}.bowl{font-size:5rem;animation:wiggle .4s infinite alternate}.oven{font-size:5rem;display:none;animation:pulse .7s infinite alternate}.sparkles{font-size:2rem;animation:pulse .4s infinite alternate}@keyframes wiggle{to{transform:rotate(8deg)}}@keyframes pulse{to{transform:scale(1.12)}}
+.rewardcard{width:min(430px,100%);background:white;border:5px solid var(--ink);border-radius:18px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px}.rarity{font-weight:1000;border:2px solid var(--ink);border-radius:8px;padding:6px 10px;font-size:.8rem;text-transform:uppercase}.Common{background:#e0e0e0;color:#424242}.Rare{background:#64b5f6;color:#0d47a1}.Epic{background:#ce93d8;color:#4a148c}.Legendary{background:#ffd54f;color:#7a4b00}.dessertbig{width:125px;height:125px;background:var(--cream);border:4px solid var(--ink);border-radius:15px;display:grid;place-items:center;font-size:4.6rem;box-shadow:2px 2px 0 var(--ink)}.dessert-art{position:relative;display:inline-grid;place-items:center;line-height:1}.dessert-base{display:block}.dessert-topping{position:absolute;right:-.08em;top:-.16em;font-size:.43em;filter:drop-shadow(1px 1px 0 white);transform:rotate(10deg)}.slot .dessert-art{font-size:2rem}.slot .dessert-topping{font-size:.72em;right:-.12em;top:-.16em}.dessertname{font-weight:1000;font-size:1.2rem}.muted{color:#795548;font-weight:800;font-size:.9rem}.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%}.row .btn{flex:1;min-width:130px}
+.tabs{display:flex;gap:7px;overflow-x:auto;padding:5px 3px 12px}.tab{border:3px solid var(--ink);border-radius:8px;background:white;padding:9px 12px;font-weight:900;white-space:nowrap;flex:0 0 auto}.tab.active{background:var(--pink);color:white}
+.collectiongrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:9px;overflow:auto;padding:5px 3px;align-content:start}.slot{border:3px solid var(--ink);border-radius:10px;background:white;min-height:105px;padding:7px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;position:relative}.slot.locked{background:#e8e4e1;color:#888}.slot .emoji{font-size:2rem}.slot .name{font-size:.72rem;font-weight:900;line-height:1.15}.count{position:absolute;right:3px;bottom:3px;background:var(--brown);color:white;border-radius:4px;padding:2px 4px;font-size:.65rem;font-weight:900}
+.statsgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.stat{background:white;border:3px solid var(--ink);border-radius:12px;padding:14px;box-shadow:2px 2px 0 var(--ink)}.stat h3{font-size:.8rem;margin:0 0 8px;color:var(--brown)}.stat strong{font-size:1.5rem}.chips{display:flex;gap:7px;flex-wrap:wrap}.chip{background:var(--pinklight);border:2px solid var(--ink);border-radius:7px;padding:5px 8px;font-weight:900;font-size:.85rem}
+.review-list{display:grid;gap:10px;padding:3px 2px 12px;min-height:0;overflow-y:auto;overscroll-behavior:contain;align-content:start}.screen#review{overflow:hidden}.screen#review.active{display:flex;flex-direction:column}.screen#review .header,.screen#review>p,.screen#review .tabs{flex-shrink:0}.screen#review .tabs{position:sticky;top:0;z-index:4;background:var(--cream);padding:8px 3px 12px}.screen#review .review-list{flex:1 1 auto;min-height:0}.review-card{background:#fff;border:3px solid var(--ink);border-radius:12px;padding:12px;box-shadow:2px 2px 0 var(--ink);display:grid;gap:8px}.review-card h3{margin:0;font-size:1rem;line-height:1.6}.review-blank{display:inline-block;min-width:58px;border-bottom:2px dashed var(--pink);text-align:center}.review-blank.answer-highlight{border-bottom-color:#d7193f}.review-card p{margin:0;font-weight:800}.base-verb-cue{display:inline-block;color:#3e2723;background:#fff0b3;border:3px solid #5c4033;border-radius:10px;padding:6px 11px;margin:8px 4px 0;font-size:1.02em;line-height:1.25;font-weight:1000;white-space:normal;box-shadow:2px 2px 0 #5c4033}.typing-answer-highlight{color:#d7193f!important;font-weight:1000;text-decoration:underline;text-decoration-thickness:2px}.answer-highlight{color:#d7193f!important;font-weight:1000;text-decoration:underline;text-decoration-thickness:2px}.ingredient.answer-highlight{border-color:#d7193f!important;background:#ffe0e6!important;color:#b00020!important;box-shadow:0 0 0 3px #ff9caf!important}.review-delete-row{display:block!important;width:100%;margin:2px 0 4px}.review-delete-button{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:2!important;width:100%!important;min-height:58px!important;margin:6px 0!important;padding:14px!important;background:#ffd6df!important;border:3px solid #c90032!important;border-radius:10px!important;color:#8b001f!important;font-size:1rem!important;font-weight:1000!important;box-shadow:2px 2px 0 #8b001f!important;cursor:pointer!important}.review-actions{display:flex;gap:8px;flex-wrap:wrap}.review-actions .btn{flex:1;min-width:110px}.typing-input{width:100%;border:3px solid var(--ink);border-radius:10px;padding:13px;font:inherit;font-weight:900;font-size:1.1rem}.review-empty{background:#fff;border:2px dashed var(--pink);padding:14px;border-radius:10px;font-weight:800;text-align:center}.sound-controls{position:absolute;top:10px;right:10px;z-index:2;display:grid;gap:7px;justify-items:end}.sound-toggle{position:static}.guide-launch{background:var(--mint);color:var(--ink)}
+.tutorial-overlay{position:absolute;inset:0;background:rgba(15,22,35,.015);z-index:20;display:none;pointer-events:none}
+.tutorial-overlay.show{display:block}
+.tutorial-card{position:absolute;width:min(440px,calc(100% - 24px));max-height:42dvh;overflow:auto;background:rgba(255,250,239,.99);border:3px solid #76503a;border-radius:18px;padding:16px 18px;text-align:left;box-shadow:0 4px 0 #3e2a20,0 7px 18px #0004;pointer-events:auto}
+.tutorial-card.pos-tr{top:8px;right:8px}.tutorial-card.pos-tl{top:8px;left:8px}.tutorial-card.pos-br{bottom:8px;right:8px}.tutorial-card.pos-bl{bottom:8px;left:8px}.tutorial-card.answer-step{bottom:auto;top:8px;left:50%;right:auto;transform:translateX(-50%);width:min(330px,calc(100% - 16px));max-height:15dvh;overflow:auto;padding:6px 9px}.tutorial-card.answer-step .tutorial-npc-row{margin-bottom:5px}.tutorial-card.answer-step .bunny-npc{width:30px;height:30px;flex-basis:30px}.tutorial-card.answer-step .bunny-npc-face{font-size:1.1rem}.tutorial-card.answer-step .tutorial-message{font-size:.84rem;line-height:1.2;margin:2px 0}.tutorial-card.answer-step .tutorial-message .tutorial-zh-line{font-size:.9em;line-height:1.2;margin-top:2px}.tutorial-card.answer-step .tutorial-step{margin-top:3px}.tutorial-card.answer-step .tutorial-actions{margin-top:3px}.tutorial-card.answer-step .tutorial-actions .btn{padding:6px 9px;min-width:90px;font-size:.82rem}
+.tutorial-npc-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}.bunny-npc{position:static;flex:0 0 48px;width:48px;height:48px;display:grid;place-items:center;background:#fff0d9;border:3px solid #76503a;border-radius:50%;box-shadow:0 2px 0 #3e2a20}.bunny-npc-face{font-size:1.8rem;line-height:1}.bunny-npc-name{font-weight:1000;color:#74452e;font-size:1rem}.tutorial-message{font-size:1.12rem;font-weight:800;line-height:1.65;margin:5px 0 12px;overflow-wrap:anywhere}.tutorial-message .tutorial-zh-line{display:block;margin-top:7px;font-size:1.08em;line-height:1.7}.tutorial-button-name{display:inline-block;background:#ffe49a;color:#5b351e;border:1.5px solid #b87925;border-radius:5px;padding:0 4px;font-weight:1000;white-space:normal}
+.tutorial-card.story-page{max-height:58dvh}.tutorial-actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}.tutorial-actions .btn{flex:0 1 auto;min-width:110px;padding:10px 13px;font-size:.95rem}.tutorial-step{font-size:.85rem;color:#795548;font-weight:900;margin-top:8px}.tutorial-highlight{outline:4px solid #ffcf36!important;outline-offset:4px;position:relative;z-index:23!important;filter:drop-shadow(0 0 7px #fff) drop-shadow(0 0 5px #ffb000)}
+@media(max-width:600px){.screen#review .tabs{overflow-x:auto;scrollbar-width:thin}.screen#review .tab{font-size:.78rem;padding:8px 9px}.screen#review .review-list{padding-bottom:24px}.tutorial-card{width:min(370px,calc(100% - 16px));max-height:40dvh;padding:13px 14px}.tutorial-card.story-page{max-height:58dvh}.tutorial-message{font-size:1.05rem;margin:7px 0}.tutorial-message .tutorial-zh-line{font-size:1.04em}.tutorial-actions{margin-top:10px}.tutorial-npc-row{gap:8px;margin-bottom:10px}.bunny-npc-name{font-size:.95rem}}
+.modal{position:absolute;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:18px;z-index:5}.modal.show{display:flex}.modalbox{max-width:340px;width:100%;padding:20px;background:white;border:5px solid var(--ink);border-radius:15px;text-align:center;box-shadow:var(--shadow)}.modalbox h2{margin-bottom:12px}.modalbox p{margin-bottom:15px;font-weight:800}
+@media(max-width:600px){.tutorial-card{width:min(370px,calc(100% - 16px));max-height:40dvh;padding:13px 14px}.tutorial-message{font-size:1.05rem;margin:7px 0}.tutorial-message .tutorial-zh-line{font-size:1.04em}.tutorial-actions{margin-top:10px}.tutorial-npc-row{gap:8px;margin-bottom:10px}body{padding:0}#game{height:100dvh;min-height:0;border:0;border-radius:0;box-shadow:none}.screen{padding:14px}.header{margin-bottom:10px}.customer{padding:8px}.question{padding:13px 8px}.ingredient{min-height:110px}.collectiongrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-height:680px){#game{height:100dvh;min-height:0}.screen{padding:12px}.hero{margin:8px}.customer{margin-bottom:8px}.question{padding:10px;margin-bottom:4px}.ingredients{gap:7px}.ingredient{min-height:90px;padding:6px}.foodicon{font-size:1.8rem}}
+</style>
+</head>
+<body>
+<div id="game">
+  <section id="home" class="screen active">
+    <div class="sound-controls">
+      <button class="btn small sound-toggle" id="sound-btn" aria-pressed="true">🔊 Sound On</button>
+      <button class="btn small sound-toggle guide-launch" id="guide-btn" type="button">📘 Beginner's Guide</button>
+    </div>
+    <div>
+      <h1 class="pixel logo">Magical Bakery</h1>
+      <div class="subtitle">A LITTLE MAGIC, A LOT OF DESSERTS!</div>
+      <div class="hero" aria-hidden="true">🧁✨🍪</div>
+      <p><strong>Help the animals bring their lost dessert recipes back to life!</strong></p>
+      <div class="menu">
+        <button class="btn" id="start-btn">🧁 Start Baking</button>
+        <button class="btn mint" id="collection-btn">📖 Dessert Collection</button>
+        <button class="btn lav" id="progress-btn">⭐ Learning Stats</button>
+        <button class="btn yellow" id="review-btn">📝 Review Mistakes</button>
+      </div>
+      <div class="foot">100 desserts to discover • Every bake is a chance to learn!</div>
+    </div>
+  </section>
+
+  <section id="baking" class="screen">
+    <div class="header"><button class="btn small" data-screen="home">← Home</button><div class="badge" id="bake-count">Unique: 0/100</div></div>
+    <div class="customer"><div class="avatar" id="customer-avatar">🐰</div><div class="speech" id="customer-speech">Hi, little baker! Let's make something sweet!</div></div>
+    <div class="question" id="question-text">Yesterday, I <span class="blank">___</span> a cake.</div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <button class="btn yellow" id="bake-after-mistake-btn" type="button" hidden>I understand — Bake Anyway 🧁</button>
+    <div class="ingredients" id="ingredients"></div>
+  </section>
+
+  <section id="typing" class="screen center">
+    <div class="header" style="width:100%"><button class="btn small" id="typing-home-btn">← Home</button><div class="badge" id="typing-count">Verb Challenge</div></div>
+    <h2 class="pixel">Quick Verb Check!</h2>
+    <div class="question" id="typing-question">Yesterday, I <span class="blank">___</span> my room.</div>
+    <form id="typing-form" style="width:min(420px,100%);display:grid;gap:10px">
+      <label for="typing-answer"><strong>Your answer</strong></label>
+      <input class="typing-input" id="typing-answer" autocomplete="off" autocapitalize="off" placeholder="Type the past tense..." required>
+      <button class="btn" type="submit">Check Answer</button>
+    </form>
+    <div class="feedback" id="typing-feedback" aria-live="polite"></div>
+    <button class="btn mint" id="typing-continue-btn" hidden>Continue Baking 🧁</button>
+  </section>
+
+  <section id="review" class="screen">
+    <div class="header"><button class="btn small" data-screen="home">← Home</button><strong class="pixel">Review Center</strong></div>
+    <p class="muted">Practice mistakes, reveal answers, and move mastered questions into your collection here.</p>
+    <div class="tabs" id="review-tabs">
+      <button class="tab active" data-review-tab="notMastered">Not Mastered <span id="not-mastered-count">0</span></button>
+      <button class="tab" data-review-tab="mastered">Mastered <span id="mastered-count">0</span></button>
+    </div>
+    <div class="review-list" id="review-list"></div>
+  </section>
+
+  <section id="animation" class="screen center">
+    <h2 class="pixel" id="animation-title">Baking in progress!</h2>
+    <p id="animation-caption" class="muted">Mixing the ingredients...</p>
+    <div class="kitchen"><div class="bowl" id="bowl">🥣</div><div class="oven" id="oven">🔥</div></div>
+    <div class="sparkles">✨ 🍓 ✨</div>
+  </section>
+
+  <section id="reward" class="screen center">
+    <div class="header" style="width:100%;align-self:stretch"><button class="btn small" data-screen="home">← Home</button><span aria-hidden="true"></span></div>
+    <div class="rewardcard">
+      <div class="rarity Epic" id="reward-rarity">EPIC</div>
+      <div class="dessertbig" id="reward-emoji">🍰</div>
+      <div class="dessertname" id="reward-name">Strawberry Shortcake</div>
+      <div class="muted" id="reward-status">New dessert unlocked!</div>
+      <div id="legendary-note" hidden class="pixel" style="font-size:.7rem;color:#a56a00">✨ HIDDEN LEGENDARY BONUS! ✨</div>
+      <div class="row"><button class="btn" id="next-btn">Next Bake 🧁</button><button class="btn mint" id="view-btn">View Collection 📖</button><button class="btn yellow" id="return-review-btn" hidden>← Back to Review Center</button></div>
+    </div>
+  </section>
+
+  <section id="collection" class="screen">
+    <div class="header"><button class="btn small" data-screen="home">← Home</button><div><strong class="pixel">My Collection</strong><div class="muted" id="collection-total">0/100 collected</div></div></div>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tier="Common">Common 0/30</button>
+      <button class="tab" data-tier="Rare">Rare 0/30</button>
+      <button class="tab" data-tier="Epic">Epic 0/30</button>
+      <button class="tab" data-tier="Legendary">Legendary 0/10</button>
+    </div>
+    <div class="collectiongrid" id="collection-grid"></div>
+    <p class="muted" style="margin-top:10px">Duplicates are allowed. Only new designs increase your collection progress.</p>
+  </section>
+
+  <section id="progress" class="screen">
+    <div class="header"><button class="btn small" data-screen="home">← Home</button><strong class="pixel">Learning Stats</strong></div>
+    <div class="statsgrid">
+      <div class="stat"><h3>BAKING ROUNDS</h3><strong id="stat-rounds">0</strong></div>
+      <div class="stat"><h3>FIRST-TRY CORRECT</h3><strong id="stat-first">0</strong></div>
+      <div class="stat"><h3>SECOND-TRY CORRECT</h3><strong id="stat-second">0</strong></div>
+      <div class="stat"><h3>NEEDED THE ANSWER</h3><strong id="stat-missed">0</strong></div>
+    </div>
+    <div class="stat"><h3>VERBS TO PRACTICE</h3><div class="chips" id="struggled-list"><span class="muted">No tricky verbs yet. Keep baking!</span></div></div>
+    <p class="muted" style="margin-top:12px">Mistakes help us learn. Keep trying, little baker!</p>
+    <button class="btn yellow" id="reset-btn" style="margin-top:auto">Reset All Progress</button>
+  </section>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="modalbox"><h2 class="pixel" id="modal-title">Reset progress?</h2><p id="modal-text">This will clear your collected desserts and learning stats.</p><div class="row"><button class="btn mint" id="modal-cancel">Cancel</button><button class="btn" id="modal-confirm">Reset</button></div></div>
+  </div>
+</div>
+  <div class="tutorial-overlay" id="tutorial-overlay" role="dialog" aria-modal="true" aria-label="Magical Bakery beginner guide">
+    <div class="tutorial-card">
+      <div class="tutorial-npc-row"><div class="bunny-npc" role="img" aria-label="Phoebe the bunny"><div class="bunny-npc-face">🐰</div></div><div class="bunny-npc-name">Phoebe the Bunny</div></div>
+      <div class="tutorial-message" id="tutorial-message" aria-live="polite"></div>
+      <div class="tutorial-step" id="tutorial-step"></div>
+      <div class="tutorial-actions">
+        <button class="btn mint" id="tutorial-skip" type="button">Skip Guide / 跳過教學</button>
+        <button class="btn" id="tutorial-next" type="button">Next / 下一步</button>
+      </div>
+    </div>
+  </div>
+  <div class="tutorial-coach" id="tutorial-coach"><span class="coach-face">🐰</span> <span id="tutorial-coach-text"></span></div>
+<script>
+'use strict';
+const Game = (() => {
+  const STORAGE_KEY = 'pixelPastrySave_v1';
+  const avatars = ['🐰','🐻','🐱','🐸','🦊','🐼','🐹','🐥'];
+  const ingredientsIcons = ['🥚','🍓','🍞','🧈','🍫','🥛','🍎','🍯','🍋','🥣','🍌','🫐'];
+  const questions = [
+    {before:'Yesterday, I ',after:' a cake for my mom.',verb:'made',base:'make',wrong:['maked','make'],hint:'Look at “Yesterday.” It tells us the action happened in the past.',explain:'Made is the past tense of make.',avatar:'🐰'},
+    {before:'Yesterday, she ',after:' an apple.',verb:'ate',base:'eat',wrong:['eated','eat'],hint:'The action happened yesterday. What is the past tense of eat?',explain:'Ate is the past tense of eat.',avatar:'🐱'},
+    {before:'We ',after:' to school yesterday.',verb:'went',base:'go',wrong:['goed','go'],hint:'Go is an irregular verb. Think of its special past-tense form.',explain:'Went is the past tense of go.',avatar:'🐻'},
+    {before:'He ',after:' the dishes last night.',verb:'washed',base:'wash',wrong:['washs','wash'],hint:'This is a regular verb. Add -ed to wash.',explain:'Washed is the past tense of wash.',avatar:'🐸'},
+    {before:'I ',after:' soccer after school yesterday.',verb:'played',base:'play',wrong:['plaied','play'],hint:'This regular verb needs an -ed ending.',explain:'Played is the past tense of play.',avatar:'🦊'},
+    {before:'They ',after:' a movie last night.',verb:'watched',base:'watch',wrong:['watcht','watch'],hint:'Look for the time clue “last night.”',explain:'Watched is the past tense of watch.',avatar:'🐼'},
+    {before:'Mom ',after:' some strawberries yesterday.',verb:'bought',base:'buy',wrong:['buyed','buy'],hint:'Buy is an irregular verb. Its past tense changes spelling.',explain:'Bought is the past tense of buy.',avatar:'🐹'},
+    {before:'I ',after:' a cute cat yesterday.',verb:'saw',base:'see',wrong:['seed','see'],hint:'See is an irregular verb. Its past tense is not made with -ed.',explain:'Saw is the past tense of see.',avatar:'🐥'},
+    {before:'She ',after:' cookies for the class yesterday.',verb:'baked',base:'bake',wrong:['bakeed','bake'],hint:'This regular verb ends in silent e. Add -d.',explain:'Baked is the past tense of bake.',avatar:'🐰'},
+    {before:'We ',after:' our grandma last Sunday.',verb:'visited',base:'visit',wrong:['visitd','visiting'],hint:'This regular verb needs an -ed ending.',explain:'Visited is the past tense of visit.',avatar:'🐱'},
+    {before:'He ',after:' very fast in the race yesterday.',verb:'ran',base:'run',wrong:['runned','run'],hint:'Run is an irregular verb. Its vowel changes in the past tense.',explain:'Ran is the past tense of run.',avatar:'🐻'},
+    {before:'I ',after:' a glass of milk this morning.',verb:'drank',base:'drink',wrong:['drinked','drunk'],hint:'Drink is an irregular verb. What is its past-tense form?',explain:'Drank is the past tense of drink.',avatar:'🐸'},
+    {before:'She ',after:' me a cupcake yesterday.',verb:'gave',base:'give',wrong:['gived','give'],hint:'Give is an irregular verb. Its past tense changes.',explain:'Gave is the past tense of give.',avatar:'🦊'},
+    {before:'Dad ',after:' dinner last night.',verb:'cooked',base:'cook',wrong:['cookt','cook'],hint:'This regular verb needs an -ed ending.',explain:'Cooked is the past tense of cook.',avatar:'🐼'},
+    {before:'I ',after:' my room yesterday.',verb:'cleaned',base:'clean',wrong:['cleant','clean'],hint:'This regular verb needs an -ed ending.',explain:'Cleaned is the past tense of clean.',avatar:'🐹'},
+    {before:'They ',after:' to the park last weekend.',verb:'came',base:'come',wrong:['comed','come'],hint:'Come is an irregular verb. Its past tense changes.',explain:'Came is the past tense of come.',avatar:'🐥'},
+    {before:'We ',after:' a picnic yesterday.',verb:'had',base:'have',wrong:['haved','have'],hint:'Have is an irregular verb. Its past tense is a short word.',explain:'Had is the past tense of have.',avatar:'🐰'},
+    {before:'He ',after:' a picture of the cake.',verb:'took',base:'take',wrong:['taked','taken'],hint:'Take is an irregular verb. Its past tense changes.',explain:'Took is the past tense of take.',avatar:'🐱'},
+    {before:'I ',after:' my friend with homework yesterday.',verb:'helped',base:'help',wrong:['helped','help'],hint:'This regular verb needs an -ed ending.',explain:'Helped is the past tense of help.',avatar:'🐻'},
+    {before:'She ',after:' over the puddle yesterday.',verb:'jumped',base:'jump',wrong:['jumpd','jump'],hint:'This regular verb needs an -ed ending.',explain:'Jumped is the past tense of jump.',avatar:'🐸'},
+    {before:'He ',after:' his lunch at noon.',verb:'ate',base:'eat',wrong:['eated','eat'],hint:'Eat is irregular. We do not add -ed to make its past tense.',explain:'Ate is the past tense of eat.',avatar:'🦊'},
+    {before:'I ',after:' my hands before dinner.',verb:'washed',base:'wash',wrong:['wash','washes'],hint:'The time clue is “before dinner” in this story about yesterday. Use the past tense.',explain:'Washed is the past tense of wash.',avatar:'🐼'},
+    {before:'They ',after:' a big chocolate cake.',verb:'made',base:'make',wrong:['maked','making'],hint:'Make is irregular. Its past tense is made.',explain:'Made is the past tense of make.',avatar:'🐹'},
+    {before:'We ',after:' our teacher at the store.',verb:'saw',base:'see',wrong:['seed','seeing'],hint:'See is irregular. The past tense has three letters.',explain:'Saw is the past tense of see.',avatar:'🐥'},
+    {before:'She ',after:' the bus yesterday morning.',verb:'missed',base:'miss',wrong:['misss','miss'],hint:'Add -ed to the original verb miss.',explain:'',avatar:'🐰'},
+    {before:'I ',after:' a letter to my cousin.',verb:'wrote',base:'write',wrong:['writed','written'],hint:'Write is irregular. Its past tense changes the spelling.',explain:'Wrote is the past tense of write.',avatar:'🐱'},
+    {before:'He ',after:' his bike to school yesterday.',verb:'rode',base:'ride',wrong:['rided','ridden'],hint:'Ride is irregular. Its past tense is rode.',explain:'Rode is the past tense of ride.',avatar:'🐻'},
+    {before:'We ',after:' the classroom after art class.',verb:'cleaned',base:'clean',wrong:['cleant','clean'],hint:'This regular verb needs an -ed ending.',explain:'Cleaned is the past tense of clean.',avatar:'🐸'},
+    {before:'They ',after:' a song at the party.',verb:'sang',base:'sing',wrong:['singed','sung'],hint:'Sing is irregular. Its past tense changes the vowel.',explain:'Sang is the past tense of sing.',avatar:'🦊'},
+    {before:'I ',after:' orange juice with breakfast yesterday.',verb:'drank',base:'drink',wrong:['drinked','drunk'],hint:'Use the simple past form of drink, not the past participle.',explain:'Drank is the simple past tense of drink.',avatar:'🐼'}
+  ];
+  const dessertSeeds = [
+    ['Cake','🍰',['Strawberry Shortcake','Chocolate Fudge Cake','Matcha Cream Cake','Blueberry Cake','Vanilla Cloud Cake','Rainbow Layer Cake','Lemon Drizzle Cake','Caramel Cake','Mango Mousse Cake','Red Velvet Cake']],
+    ['Cookie','🍪',['Chocolate Chip Cookie','Strawberry Cookie','Matcha Cookie','Oatmeal Cookie','Lemon Sugar Cookie','Double Chocolate Cookie','Vanilla Star Cookie','Blueberry Cookie','Caramel Cookie','Rainbow Sprinkle Cookie']],
+    ['Cupcake','🧁',['Rainbow Cupcake','Vanilla Cupcake','Chocolate Cupcake','Strawberry Cupcake','Blueberry Cupcake','Mint Cupcake','Lemon Cupcake','Caramel Cupcake','Cherry Cupcake','Galaxy Cupcake']],
+    ['Donut','🍩',['Strawberry Glazed Donut','Chocolate Glazed Donut','Lemon Donut','Rainbow Donut','Matcha Donut','Blueberry Donut','Caramel Donut','Vanilla Sprinkle Donut','Pink Sugar Donut','Cinnamon Donut']],
+    ['Candy','🍬',['Strawberry Candy','Gummy Candy','Lemon Candy','Blueberry Candy','Mint Candy','Peach Candy','Orange Candy','Grape Candy','Rainbow Candy','Cherry Candy']],
+    ['Tart','🥧',['Lemon Tart','Strawberry Tart','Blueberry Tart','Apple Tart','Chocolate Tart','Peach Tart','Raspberry Tart','Custard Tart','Mango Tart','Caramel Tart']],
+    ['Pudding','🍮',['Caramel Pudding','Matcha Pudding','Mango Pudding','Chocolate Pudding','Vanilla Pudding','Strawberry Pudding','Coffee Pudding','Coconut Pudding','Blueberry Pudding','Rainbow Pudding']],
+    ['Pancake','🥞',['Honey Pancakes','Berry Pancakes','Chocolate Pancakes','Banana Pancakes','Matcha Pancakes','Lemon Pancakes','Caramel Pancakes','Rainbow Pancakes','Apple Pancakes','Vanilla Pancakes']],
+    ['Waffle','🧇',['Berry Waffle','Chocolate Waffle','Honey Waffle','Banana Waffle','Matcha Waffle','Lemon Waffle','Caramel Waffle','Rainbow Waffle','Apple Waffle','Vanilla Waffle']],
+    ['Dango','🍡',['Cream Puff','Chocolate Brownie','Strawberry Swiss Roll','Cinnamon Roll','Vanilla Eclair','Chocolate Croissant','Berry Crepe','Mango Dango','Apple Pie Bite','Marshmallow Treat']]
+  ];
+  const tierDefs = [
+    {tier:'Common',count:30,offset:0},
+    {tier:'Rare',count:30,offset:30},
+    {tier:'Epic',count:30,offset:60},
+    {tier:'Legendary',count:10,offset:90}
+  ];
+  const desserts = [];
+  let seedIndex=0;
+  tierDefs.forEach(def=>{
+    for(let i=0;i<def.count;i++){
+      const group=dessertSeeds[seedIndex % dessertSeeds.length];
+      const flavor=group[2][Math.floor(seedIndex/dessertSeeds.length)%group[2].length];
+      desserts.push({id:`dessert-${String(def.offset+i+1).padStart(3,'0')}`,name:flavor,category:group[0],emoji:group[1],tier:def.tier});
+      seedIndex++;
+    }
+  });
+  // Make all dessert names unique while preserving category/flavor variety.
+  desserts.forEach((d,i)=>{ if(desserts.slice(0,i).some(x=>x.name===d.name)) d.name += ` · ${d.tier} ${i+1}`; });
+  const defaultSave = () => ({counts:{},rounds:0,first:0,second:0,missed:0,verbMisses:{},seenQuestions:[],reviewItems:{},correctStreak:0});
+  let save = loadSave(), currentQuestion=null, attempts=0, roundResolved=false, rewardTier='Common', currentDessert=null, currentTab='Common', animationTimer=null;
+  let questionsSinceTyping=0, recentQuestions=[], typingQuestion=null, reviewMode=false, currentReviewKey=null, currentReviewTab='notMastered', legendaryStreakReward=false, reviewRewardEligible=false, returnToReviewAfterReward=false;
+  let audioContext=null, musicTimer=null, musicEnabled=true, musicStep=0;
+  const $ = id => document.getElementById(id);
+  function loadSave(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return defaultSave();const parsed=JSON.parse(raw);return {...defaultSave(),...parsed,counts:parsed.counts||{},verbMisses:parsed.verbMisses||{},reviewItems:parsed.reviewItems||{}}}catch(e){return defaultSave()}}
+  function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(save))}catch(e){console.warn('Progress could not be saved.',e)}}
+  function switchScreen(name){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(name).classList.add('active');if(name==='baking')$('bake-count').textContent=`Unique: ${uniqueCount()}/100`;if(name==='collection')renderCollection(currentTab);if(name==='progress')updateProgress();if(name==='review')renderReview()}
+  function uniqueCount(){return desserts.filter(d=>(save.counts[d.id]||0)>0).length}
+  function shuffled(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function questionKey(q){return q.before+q.verb+q.after}
+  function rememberMistake(q, typing=false){
+    const key=reviewMode && currentReviewKey ? currentReviewKey : questionKey(q);
+    if(!save.reviewItems[key]) save.reviewItems[key]={key,verb:q.verb,base:q.base,before:q.before,after:q.after,hint:q.hint,explain:q.explain,avatar:q.avatar,mastered:false};
+    else save.reviewItems[key].mastered=false;
+    if(typing) save.reviewItems[key].typing=true;
+    persist();
+  }
+  function markMastered(q, explicitKey=null){
+    // Review questions must update the exact card that launched Practice Again.
+    // Do not rebuild the key from a question object: source-question formatting
+    // can differ slightly from the saved review card.
+    const key=explicitKey || (reviewMode && currentReviewKey) || questionKey(q);
+    if(!save.reviewItems[key]){
+      save.reviewItems[key]={key,verb:q.verb,base:q.base,before:q.before,after:q.after,hint:q.hint,explain:q.explain,avatar:q.avatar,mastered:true};
+    }else{
+      save.reviewItems[key].mastered=true;
+    }
+    persist();
+    renderReview();
+  }
+  function ensureAudio(){
+    if(!musicEnabled)return;
+    try{
+      const Ctx=window.AudioContext||window.webkitAudioContext;
+      if(!Ctx)return;
+      if(!audioContext)audioContext=new Ctx();
+      if(audioContext.state==='suspended')audioContext.resume();
+      if(!musicTimer)startAmbientMusic();
+    }catch(e){}
+  }
+  function tone(freq,duration=0.09,type='sine',volume=0.035,delay=0){
+    if(!musicEnabled)return;
+    try{
+      ensureAudio();
+      if(!audioContext)return;
+      const osc=audioContext.createOscillator(),gain=audioContext.createGain();
+      osc.type=type;osc.frequency.setValueAtTime(freq,audioContext.currentTime+delay);
+      gain.gain.setValueAtTime(0.0001,audioContext.currentTime+delay);
+      gain.gain.exponentialRampToValueAtTime(volume,audioContext.currentTime+delay+0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001,audioContext.currentTime+delay+duration);
+      osc.connect(gain);gain.connect(audioContext.destination);
+      osc.start(audioContext.currentTime+delay);osc.stop(audioContext.currentTime+delay+duration+0.03);
+    }catch(e){}
+  }
+  function startAmbientMusic(){
+    // A quiet, original two-note ambient loop made with Web Audio; no external audio files.
+    const notes=[261.63,329.63,392,329.63,293.66,349.23,392,349.23];
+    musicTimer=setInterval(()=>{if(musicEnabled){tone(notes[musicStep%notes.length],0.8,'sine',0.045);if(musicStep%4===0)tone(notes[(musicStep+2)%notes.length]/2,1.2,'triangle',0.028,0.12);musicStep++;}},900);
+  }
+  function stopAmbientMusic(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
+  function playClick(){tone(520,0.045,'triangle',0.025)}
+  function playCorrect(){tone(523.25,0.11,'sine',0.045);tone(659.25,0.13,'sine',0.04,0.1);tone(783.99,0.16,'sine',0.035,0.2)}
+  function playWrong(){tone(220,0.13,'triangle',0.035);tone(174.61,0.16,'triangle',0.025,0.1)}
+  function foodIconForWord(word){
+    const w=String(word).toLowerCase();
+    // Keep the answer choices visually consistent with the dessert-baking theme.
+    // Icons are ingredients or baking tools, not clues to the verb's meaning.
+    const bakingIcons=['🥚','🌾','🍬','🧈','🥛','🧂','🧁','🥣','🍫','🍓','🍯','🍋'];
+    let hash=0;
+    for(let i=0;i<w.length;i++) hash=(hash*31+w.charCodeAt(i))>>>0;
+    return bakingIcons[hash%bakingIcons.length];
+  }
+
+  function startNextRound(){
+    clearTimeout(animationTimer);
+    if(questionsSinceTyping>=5){startTypingChallenge();return;}
+    reviewMode=false;currentReviewKey=null;attempts=0;roundResolved=false;
+    let available=questions.filter(q=>!save.seenQuestions.includes(questionKey(q)));
+    if(!available.length){save.seenQuestions=[];available=[...questions]}
+    currentQuestion=available[Math.floor(Math.random()*available.length)];
+    $('customer-avatar').textContent=currentQuestion.avatar;
+    const animalLines={
+      '🐰':'I’m ready to bake something yummy! Can you help me choose the right ingredients?',
+      '🐻':'Oh crumbs! Let’s make something delicious together. Will you help?',
+      '🦊':'I have a sweet baking idea! Can you help me make it?',
+      '🐱':'I’m craving a sweet treat! What shall we make today?',
+      '🐸':'Ribbit! I have a baking challenge for you. Are you ready?',
+      '🐼':'Let’s create a lovely dessert together. Can you help?',
+      '🐹':'I found some ingredients. Shall we see what we can bake?',
+      '🐥':'Peep-peep! Let’s bake a surprise treat together!'
+    };
+    $('customer-speech').textContent=animalLines[currentQuestion.avatar]||'Let’s bake a surprise dessert together! Can you help?';
+    $('question-text').innerHTML=`${escapeHtml(currentQuestion.before)}<span class="blank">___</span>${escapeHtml(currentQuestion.after)}`;
+    $('feedback').textContent='';
+    $('bake-after-mistake-btn').hidden=true;
+    $('ingredients').innerHTML='';
+    const candidates=shuffled([...new Set([currentQuestion.verb,...currentQuestion.wrong].filter(w=>!/^didn?\s+/i.test(w)))]);
+    const finalOptions=candidates.slice(0,4);
+    while(finalOptions.length<4){
+      const fallback=shuffled([currentQuestion.base,currentQuestion.verb+'ing','will '+currentQuestion.base,'has '+currentQuestion.base+'ed']);
+      const extra=fallback.find(w=>!finalOptions.includes(w));
+      if(!extra)break;
+      finalOptions.push(extra);
+    }
+    shuffled(finalOptions).forEach(word=>{
+      const btn=document.createElement('button');btn.className='ingredient';btn.type='button';
+      btn.innerHTML=`<span class="foodicon">${foodIconForWord(word)}</span><span class="foodlabel">${escapeHtml(word)}</span>`;
+      btn.setAttribute('aria-label',`Choose ${word}`);
+      btn.addEventListener('click',()=>chooseAnswer(word,btn));$('ingredients').appendChild(btn);
+    });
+    switchScreen('baking');
+  }
+  function startTypingChallenge(){
+    // Use a regular verb the learner has just practised whenever possible.
+    const pool=recentQuestions.slice(-5).filter(q=>q.verb.toLowerCase().endsWith('ed'));
+    const regularFallback=questions.filter(q=>q.verb.toLowerCase().endsWith('ed'));
+    const candidates=pool.length?pool:regularFallback;
+    if(!candidates.length){questionsSinceTyping=0;startNextRound();return;}
+    typingQuestion=candidates[Math.floor(Math.random()*candidates.length)];
+    $('typing-count').textContent='Verb Challenge';
+    $('typing-question').innerHTML=`${escapeHtml(typingQuestion.before)}<span class="blank">___</span>${escapeHtml(typingQuestion.after)} <span class="base-verb-cue">Base verb: ${escapeHtml(typingQuestion.base)}</span>`;
+    $('typing-answer').value='';$('typing-answer').disabled=false;
+    $('typing-feedback').textContent='';
+    $('typing-form').hidden=false;$('typing-form').querySelector('button').hidden=false;$('typing-form').querySelector('button').disabled=false;$('typing-continue-btn').hidden=true;
+    switchScreen('typing');setTimeout(()=>$('typing-answer').focus(),80);
+  }
+  function finishTypingChallenge(event){
+    if(event)event.preventDefault();
+    if(!typingQuestion)return;
+    const answer=$('typing-answer').value.trim().toLowerCase();
+    if(!answer)return;
+    $('typing-answer').disabled=true;$('typing-form').querySelector('button').disabled=true;$('typing-form').querySelector('button').hidden=true;
+    const correct=answer===typingQuestion.verb.toLowerCase();
+    if(correct){
+      $('typing-feedback').textContent='Correct! Great memory! ✨';playCorrect();
+      if(reviewMode && currentReviewKey){markMastered(typingQuestion,currentReviewKey);reviewMode=false;reviewRewardEligible=false;}
+    }else{
+      const cue=$('typing-question').querySelector('.blank');
+      if(cue){cue.textContent=typingQuestion.verb;cue.classList.add('typing-answer-highlight');}
+      $('typing-feedback').textContent='Not quite! The correct answer is shown in red.';
+      rememberMistake(typingQuestion,true);playWrong();
+    }
+    // In Review Mistakes, do not show the Continue Baking button after answering.
+    $('typing-continue-btn').hidden=!!currentReviewKey;
+  }
+  function startReviewQuestion(key){
+    const item=save.reviewItems[key];if(!item)return;
+    currentQuestion=questions.find(q=>questionKey(q)===key)||{...item,wrong:[item.base, item.verb+'ing', 'did '+item.base]};
+    reviewMode=true;currentReviewKey=key;reviewRewardEligible=!item.mastered;attempts=0;roundResolved=false;
+    $('customer-avatar').textContent=currentQuestion.avatar||'🐰';
+    $('customer-speech').textContent='Let’s practise this question again. You can earn a dessert if you master it!';
+    $('question-text').innerHTML=`${escapeHtml(currentQuestion.before)}<span class="blank">___</span>${escapeHtml(currentQuestion.after)}`;
+    $('feedback').textContent='Try again! Use the hint and choose the correct past-tense form.';
+    $('bake-after-mistake-btn').hidden=true;
+    $('ingredients').innerHTML='';
+    const options=shuffled([...new Set([currentQuestion.verb,...(currentQuestion.wrong||[currentQuestion.base,currentQuestion.verb+'ing','will '+currentQuestion.base])].filter(w=>!/^didn?\s+/i.test(w)))]).slice(0,4);
+    while(options.length<4){const extra=[currentQuestion.base,currentQuestion.verb+'ing','will '+currentQuestion.base,'has '+currentQuestion.base+'ed'].find(x=>!options.includes(x));if(!extra)break;options.push(extra);}
+    shuffled(options).forEach(word=>{
+      const btn=document.createElement('button');btn.className='ingredient';btn.type='button';
+      btn.dataset.answer=word;
+      btn.dataset.correct=String(word===currentQuestion.verb);
+      btn.innerHTML=`<span class="foodicon">${foodIconForWord(word)}</span><span class="foodlabel">${escapeHtml(word)}</span>`;
+      btn.addEventListener('click',()=>chooseAnswer(word,btn));$('ingredients').appendChild(btn);
+    });
+    switchScreen('baking');
+  }
+  function escapeHtml(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function toppingEmoji(name){
+    const n=name.toLowerCase();
+    if(n.includes('lemon')) return '🍋';
+    if(n.includes('strawberry')||n.includes('berry')) return '🍓';
+    if(n.includes('blueberry')) return '🫐';
+    if(n.includes('raspberry')) return '🍇';
+    if(n.includes('cherry')) return '🍒';
+    if(n.includes('apple')) return '🍎';
+    if(n.includes('peach')) return '🍑';
+    if(n.includes('mango')) return '🥭';
+    if(n.includes('banana')) return '🍌';
+    if(n.includes('coconut')) return '🥥';
+    if(n.includes('orange')) return '🍊';
+    if(n.includes('pistachio')||n.includes('matcha')||n.includes('mint')) return '🍃';
+    if(n.includes('chocolate')||n.includes('cocoa')||n.includes('brownie')) return '🍫';
+    if(n.includes('caramel')||n.includes('honey')) return '🍯';
+    if(n.includes('coffee')) return '☕';
+    if(n.includes('rainbow')||n.includes('sprinkle')||n.includes('galaxy')) return '🌈';
+    if(n.includes('rose')||n.includes('lavender')) return '🌸';
+    if(n.includes('vanilla')||n.includes('cream')||n.includes('custard')) return '🍦';
+    if(n.includes('cinnamon')) return '✨';
+    return '✨';
+  }
+  function dessertArt(d){return `<span class="dessert-art"><span class="dessert-base">${d.emoji}</span><span class="dessert-topping">${toppingEmoji(d.name)}</span></span>`}
+  function chooseAnswer(word,btn){
+    if(roundResolved)return;
+    ensureAudio();attempts++;
+    if(word===currentQuestion.verb){
+      roundResolved=true;disableIngredients();playCorrect();
+      if(reviewMode){
+        markMastered(currentQuestion,currentReviewKey);
+        $('bake-after-mistake-btn').hidden=true;
+        if(reviewRewardEligible){
+          rewardTier=Math.random()<0.5?'Epic':'Common';
+          save.rounds++;save.seenQuestions.push(questionKey(currentQuestion));persist();
+          $('feedback').textContent=`You mastered this question! You earned a ${rewardTier} dessert! 🎁`;
+          returnToReviewAfterReward=true;
+          setTimeout(()=>{reviewMode=false;reviewRewardEligible=false;bakeDessert()},550);
+        }else{
+          $('feedback').textContent='Correct! This question is now in Mastered. 🌟';
+          setTimeout(()=>{reviewMode=false;reviewRewardEligible=false;renderReview();switchScreen('review')},850);
+        }
+        return;
+      }
+      if(attempts===1){
+        save.correctStreak=(save.correctStreak||0)+1;
+        rewardTier='Epic';save.first++;
+        if(save.correctStreak>=10){rewardTier='Legendary';legendaryStreakReward=true;save.correctStreak=0;}
+        $('feedback').textContent=legendaryStreakReward?'10 correct in a row! Secret Legendary dessert unlocked! 🌟':'Perfect! Correct on your first try! ⭐';
+      }else{
+        save.correctStreak=0;rewardTier='Rare';save.second++;
+        $('feedback').textContent='Great job! You learned from the hint! 💖';
+      }
+      questionsSinceTyping++;recentQuestions.push(currentQuestion);if(recentQuestions.length>5)recentQuestions=recentQuestions.slice(-5);
+      save.rounds++;save.seenQuestions.push(questionKey(currentQuestion));persist();
+      $('bake-after-mistake-btn').hidden=true;
+      setTimeout(()=>bakeDessert(),450);
+    }else{
+      save.correctStreak=0;
+      playWrong();rememberMistake(currentQuestion);
+      save.verbMisses[currentQuestion.base]=(save.verbMisses[currentQuestion.base]||0)+1;
+      if(attempts===1){
+        $('feedback').textContent=currentQuestion.hint||'Try thinking about the past-tense form.';
+        btn.style.borderColor='#e44d70';btn.disabled=true;
+        $('ingredients').querySelectorAll('button').forEach(option=>{if(option.querySelector('.foodlabel')?.textContent.trim()===currentQuestion.verb)option.classList.add('answer-highlight')});
+        $('ingredients').querySelectorAll('button').forEach(b=>{if(b!==btn)b.style.background='#fff7dc'});
+      }else{
+        roundResolved=true;disableIngredients();
+        if(reviewMode){
+          $('feedback').textContent=`The answer is "${currentQuestion.verb}". ${currentQuestion.explain||''} You can return to the Review Center when you're ready. No rewards earned.`;
+          $('bake-after-mistake-btn').hidden=true;
+          persist();setTimeout(()=>{reviewMode=false;renderReview();switchScreen('review')},1300);
+          return;
+        }
+        rewardTier='Common';save.missed++;save.rounds++;
+        questionsSinceTyping++;recentQuestions.push(currentQuestion);if(recentQuestions.length>5)recentQuestions=recentQuestions.slice(-5);
+        $('feedback').textContent=`The correct answer is "${currentQuestion.verb}". ${currentQuestion.explain} When you're ready, press the button below to bake.`;
+        $('bake-after-mistake-btn').hidden=false;
+        $('bake-after-mistake-btn').textContent='I understand — Bake Anyway 🧁';
+        save.seenQuestions.push(questionKey(currentQuestion));persist();
+      }
+    }
+    persist();
+  }
+  function disableIngredients(){ $('ingredients').querySelectorAll('button').forEach(b=>b.disabled=true) }
+  function bakeDessert(){
+    switchScreen('animation');$('bowl').style.display='block';$('oven').style.display='none';$('animation-title').textContent='Baking in progress!';$('animation-caption').textContent='Mixing the ingredients...';
+    animationTimer=setTimeout(()=>{$('bowl').style.display='none';$('oven').style.display='block';$('animation-caption').textContent='Into the oven it goes!';$('animation-title').textContent='Almost ready...';animationTimer=setTimeout(showReward,1000)},1000);
+  }
+  function showReward(){
+    const bonus=legendaryStreakReward||Math.random()<0.0;
+    const actualTier=bonus?'Legendary':rewardTier;
+    legendaryStreakReward=false;
+    const pool=desserts.filter(d=>d.tier===actualTier);
+    currentDessert=pool[Math.floor(Math.random()*pool.length)];
+    const oldCount=save.counts[currentDessert.id]||0;save.counts[currentDessert.id]=oldCount+1;persist();
+    $('reward-rarity').className=`rarity ${actualTier}`;$('reward-rarity').textContent=actualTier==='Legendary'?'HIDDEN LEGENDARY':actualTier;
+    $('reward-emoji').innerHTML=dessertArt(currentDessert);$('reward-name').textContent=currentDessert.name;
+    $('reward-status').textContent=bonus?'10 correct answers in a row! Your secret Legendary dessert is here! 🌟':(oldCount===0?'New dessert unlocked! ✨':`Duplicate dessert! You now have ${oldCount+1}.`);
+    $('legendary-note').hidden=!bonus;
+    $('return-review-btn').hidden=!returnToReviewAfterReward;
+    // A review-practice reward must return to the Review Center, not start a new bake.
+    $('next-btn').hidden=returnToReviewAfterReward;
+    switchScreen('reward');
+    // In the guided review demo, wait until the reward screen is actually visible
+    // before asking the learner to return to the Review Center.
+    if(tutorialAdvanceOnReward){
+      tutorialAdvanceOnReward=false;
+      requestAnimationFrame(()=>advanceTutorial());
+    }
+  }
+  function renderCollection(tier){
+    currentTab=tier;
+    document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.toggle('active',t.dataset.tier===tier));
+    document.querySelectorAll('#tabs .tab').forEach(t=>{const count=desserts.filter(d=>d.tier===t.dataset.tier&&(save.counts[d.id]||0)>0).length;const total=desserts.filter(d=>d.tier===t.dataset.tier).length;t.textContent=`${t.dataset.tier==='Legendary'?'Hidden Legendary':t.dataset.tier} ${count}/${total}`});
+    $('collection-total').textContent=`${uniqueCount()}/100 collected`;
+    const grid=$('collection-grid');grid.innerHTML='';
+    desserts.filter(d=>d.tier===tier).forEach(d=>{
+      const count=save.counts[d.id]||0;const slot=document.createElement('div');slot.className='slot'+(count?'':' locked');slot.tabIndex=0;
+      slot.innerHTML=`<span class="emoji">${count?dessertArt(d):'❔'}</span><span class="name">${count?escapeHtml(d.name):'Undiscovered'}</span>${count?`<span class="count">×${count}</span>`:''}`;
+      slot.title=count?`${d.name} — ${d.category}, ${d.tier}`:'Discover this dessert!';
+      if(count){const show=()=>openDessertModal(d,count);slot.addEventListener('click',show);slot.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show()}})}
+      grid.appendChild(slot);
+    });
+  }
+  function openDessertModal(d,count){
+    $('modal-title').textContent=d.name;$('modal-text').textContent=`${d.emoji} ${toppingEmoji(d.name)}  ${d.category} • ${d.tier} • Collected ${count} time${count===1?'':'s'}.`;
+    $('modal-confirm').textContent='Lovely!';$('modal-cancel').style.display='none';$('modal').classList.add('show');
+    modalAction=()=>{$('modal').classList.remove('show');$('modal-cancel').style.display='';$('modal-confirm').textContent='Reset'};
+  }
+  let modalAction=null;
+  function updateProgress(){
+    $('stat-rounds').textContent=save.rounds;$('stat-first').textContent=save.first;$('stat-second').textContent=save.second;$('stat-missed').textContent=save.missed;
+    const entries=Object.entries(save.verbMisses).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).slice(0,12);const list=$('struggled-list');list.innerHTML='';
+    if(!entries.length){list.innerHTML='<span class="muted">No tricky verbs yet. Keep baking!</span>';return}
+    entries.forEach(([verb,n])=>{const chip=document.createElement('span');chip.className='chip';chip.textContent=`${verb} (${n})`;list.appendChild(chip)})
+  }
+  function ensureReviewDemo(resetForGuide=false){
+    // Keep one dedicated demonstration card available even when learners already
+    // have real mistakes. Reopen it as Not Mastered each time the guide is launched.
+    const demoKey='GUIDE_DEMO_GO_WENT';
+    const existing=save.reviewItems[demoKey];
+    if(!existing || resetForGuide){
+      save.reviewItems[demoKey]={key:demoKey,before:'Yesterday, I ',verb:'went',base:'go',after:' to school.',hint:'Think about the irregular past tense of “go”.',explain:'“Go” is irregular. Its past tense is “went”.',avatar:'🐰',mastered:false,wrong:['goed','going','goes'],isDemo:true};
+      persist();
+    }
+  }
+  function renderReview(){
+    const items=Object.values(save.reviewItems||{});
+    const notMastered=items.filter(x=>!x.mastered), mastered=items.filter(x=>x.mastered);
+    $('not-mastered-count').textContent=notMastered.length;$('mastered-count').textContent=mastered.length;
+    document.querySelectorAll('[data-review-tab]').forEach(t=>t.classList.toggle('active',t.dataset.reviewTab===currentReviewTab));
+    const list=$('review-list');list.innerHTML='';
+    const shown=currentReviewTab==='mastered'?mastered:notMastered;
+    if(!shown.length){list.innerHTML=`<div class="review-empty">${currentReviewTab==='mastered'?'No mastered questions yet. Answer review questions correctly to move them here.':'No mistakes to review yet. Keep baking and your missed questions will appear here!'}</div>`;return;}
+    shown.forEach(item=>{
+      const card=document.createElement('article');card.className='review-card';
+      const prompt=item.typing ? `What's the past tense of ${item.base}?` : `${item.before}_____ ${item.after}`;
+      const key=item.key||item.before+item.verb+item.after;
+      card.dataset.reviewKey=key;
+      card.dataset.reviewState=item.mastered?'mastered':'not-mastered';
+      const deleteButton=item.mastered?'<button type="button" class="review-delete-button" data-review-action="delete" aria-label="Delete this mastered question">🗑 DELETE THIS QUESTION</button>':'';
+      card.innerHTML=`<h3 class="review-prompt" data-before="${escapeHtml(item.before||'')}" data-after="${escapeHtml(item.after||'')}" data-verb="${escapeHtml(item.verb)}">${item.typing?escapeHtml(item.before||'Yesterday, I '):escapeHtml(item.before||'')}<span class="review-blank">_____</span>${escapeHtml(item.after||'')}</h3><p>Base verb: <strong>${escapeHtml(item.base)}</strong></p>${deleteButton}<div class="review-actions"><button type="button" class="btn small yellow reveal-btn" data-review-action="reveal">Show Answer</button><button type="button" class="btn small ${item.mastered?'mint':''} practice-btn" data-review-action="practice">Practice Again</button></div>`;
+      list.appendChild(card);
+    });
+  }
+  // Delegate review-card actions from the list so deletion continues to work
+  // after every re-render and for both Not Mastered and Mastered tabs.
+  $('review-list').addEventListener('click',e=>{
+    const button=e.target.closest('button[data-review-action]');
+    if(!button)return;
+    const card=button.closest('.review-card');
+    if(!card)return;
+    const key=card.dataset.reviewKey;
+    if(button.dataset.reviewAction==='delete'){
+      const entries=Object.entries(save.reviewItems||{});
+      const match=entries.find(([storedKey,entry])=>storedKey===key || entry?.key===key);
+      if(match)delete save.reviewItems[match[0]];
+      else if(save.reviewItems[key])delete save.reviewItems[key];
+      persist();
+      renderReview();
+      playClick();
+      return;
+    }
+    if(button.dataset.reviewAction==='reveal'){
+      const prompt=card.querySelector('.review-prompt');
+      const blank=prompt.querySelector('.review-blank');
+      const revealing=blank.dataset.revealed!=='true';
+      if(revealing){blank.textContent=prompt.dataset.verb;blank.classList.add('answer-highlight');blank.dataset.revealed='true';}
+      else{blank.textContent='_____';blank.classList.remove('answer-highlight');blank.dataset.revealed='false';}
+      button.textContent=revealing?'Hide Answer':'Show Answer';
+      playClick();
+      return;
+    }
+    if(button.dataset.reviewAction==='practice'){
+      ensureAudio();
+      const reviewItem=save.reviewItems[key];
+      if(reviewItem?.typing){
+        typingQuestion=questions.find(q=>questionKey(q)===key)||{...reviewItem};
+        reviewMode=true;currentReviewKey=key;reviewRewardEligible=!reviewItem.mastered;
+        $('typing-count').textContent='Review Challenge';
+        $('typing-question').innerHTML=`${escapeHtml(typingQuestion.before)}<span class="blank">___</span>${escapeHtml(typingQuestion.after)} <span class="base-verb-cue">Base verb: ${escapeHtml(typingQuestion.base)}</span>`;
+        $('typing-answer').value='';$('typing-answer').disabled=false;
+        $('typing-feedback').textContent='';
+        $('typing-form').hidden=false;$('typing-form').querySelector('button').hidden=false;$('typing-form').querySelector('button').disabled=false;$('typing-continue-btn').hidden=true;
+        switchScreen('typing');setTimeout(()=>$('typing-answer').focus(),80);
+      }else startReviewQuestion(key);
+    }
+  });
+  function showResetModal(){modalAction=()=>{save=defaultSave();persist();$('modal').classList.remove('show');updateProgress();renderCollection(currentTab);$('modal-cancel').style.display='';$('modal-confirm').textContent='Reset'};$('modal-title').textContent='Reset all progress?';$('modal-text').textContent='This clears collected desserts and learning stats. This cannot be undone.';$('modal-cancel').style.display='';$('modal-confirm').textContent='Reset';$('modal').classList.add('show')}
+
+  const tutorialSteps = [
+    {kind:'story',art:'🐰📜✨',title:'A Recipe Rescue Mission! / 食譜拯救任務！',en:'A magic puff scattered the recipe book! Phoebe lost her carrot-cupcake recipe. / 魔法風吹散了食譜！Phoebe 找不到胡蘿蔔杯子蛋糕的食譜。',zh:'',npc:'Can you help me? / 你願意幫我嗎？'},
+    {kind:'story',art:'🐻🍫🦊🍓',title:'Our Friends Need Help! / 朋友們也需要幫忙！',en:'Bear lost the chocolate-cake recipe. Fox lost the berry-cookie recipe. / 熊熊弄丟巧克力蛋糕食譜，狐狸弄丟莓果餅乾食譜。',zh:'',npc:'Let’s find them! / 一起找回來吧！'},
+    {kind:'story',art:'🐰🐻🦊🧁✨',title:'Ready to Bake? / 準備好烘焙了嗎？',en:'Answer past-tense questions to find the recipes and collect 100 desserts! / 回答動詞過去式問題，找回食譜並收集 100 種甜點！',zh:'',npc:'Let’s bake! / 開始烘焙吧！'},
+    {title:'Sound / 音效',en:'Tap Sound to turn the music off. / 點擊 Sound 關閉音樂。',npc:'Try it! / 試試看！',target:'#sound-btn',soundAction:'off',delay:160},
+    {title:'Sound On / 開啟音樂',en:'Tap Sound again to turn the music on. / 再點一次 Sound 開啟音樂。',npc:'One more tap! / 再點一下！',target:'#sound-btn',soundAction:'on',delay:160},
+    {title:'Start Baking / 開始烘焙',en:'Tap Start Baking to enter the kitchen. / 點擊 Start Baking 進入廚房。',npc:'Let’s go! / 出發吧！',target:'#start-btn',delay:180},
+    {title:'Choose an Answer / 選擇答案',en:'Read the sentence. Tap the correct past-tense answer. / 讀句子，選出正確的動詞過去式。',npc:'Tap the glowing answer! / 點擊發亮的答案！',target:'CORRECT_ANSWER',delay:2800},
+    {title:'Next Bake / 下一題',en:'Tap Next Bake for a new question. / 點擊 Next Bake 開始新題目。',npc:'Ready? / 準備好了嗎？',target:'#next-btn',delay:220},
+    {kind:'typingDemo',title:'Typing Challenge / 打字挑戰',en:'Type **cleaned** to complete the sentence. / 輸入 **cleaned** 完成句子。',npc:'Type “cleaned”! / 輸入「cleaned」！',target:'#typing-answer',delay:160},
+    {title:'Check Answer / 確認答案',en:'Tap Check Answer to see if you are right. / 點擊 Check Answer，看看答案是否正確。',npc:'Check it! / 確認答案！',target:'#typing-form button',delay:500},
+    {title:'Continue Baking / 繼續烘焙',en:'Tap Continue Baking to return to the game. / 點擊 Continue Baking 回到遊戲。',npc:'Back to baking! / 回去烘焙吧！',target:'#typing-continue-btn',delay:180},
+    {title:'New Question / 新題目',en:'Read the sentence and choose the correct past tense. / 讀句子並選出正確的動詞過去式。',npc:'You can do it! / 你可以的！',target:'CORRECT_ANSWER',delay:2800},
+    {title:'Dessert Collection / 甜點收藏',en:'Tap View Collection to see your new dessert. / 點擊 View Collection 查看新甜點。',npc:'Look what you made! / 看看你做的甜點！',target:'#view-btn',delay:180},
+    {title:'Home / 回到主選單',en:'Tap Home to return to the menu. / 點擊 Home 回到主選單。',npc:'Let’s go! / 出發！',target:'#collection [data-screen="home"]',delay:180},
+    {title:'Learning Stats / 學習統計',en:'Tap Learning Stats to see your progress. / 點擊 Learning Stats 查看進度。',npc:'Great progress! / 進步真棒！',target:'#progress-btn',delay:180},
+    {title:'Home / 回到主選單',en:'Tap Home to return to the menu. / 點擊 Home 回到主選單。',npc:'Almost there! / 快完成了！',target:'#progress [data-screen="home"]',delay:180},
+    {title:'Review Mistakes / 錯題複習',en:'Tap Review Mistakes to practice questions you missed. / 點擊 Review Mistakes，練習答錯的題目。',npc:'Let’s practice! / 一起練習！',target:'#review-btn',delay:180},
+    {title:'Not Mastered / 尚未熟練',en:'Choose a question here and try again. / 選一題，再試一次。',npc:'You’ve got this! / 你可以的！',target:'#review [data-review-tab="notMastered"]',delay:180},
+    {title:'Show Answer / 查看答案',en:'Tap Show Answer to see the answer and a short explanation. / 點擊 Show Answer 查看答案和簡短說明。',npc:'Let’s see! / 看看答案！',target:'#review .review-card .reveal-btn',delay:180},
+    {title:'Practice Again / 再次練習',en:'Tap Practice Again to answer the question. / 點擊 Practice Again，再回答一次。',npc:'Try again! / 再試一次！',target:'#review .review-card .practice-btn',delay:180},
+    {title:'Choose an Answer / 選擇答案',en:'Choose the correct answer. If you get it right, the question moves to Mastered. / 選出正確答案。答對後，題目會移到 Mastered。',npc:'Tap the right answer! / 選出正確答案！',target:'CORRECT_ANSWER',delay:2700},
+    {title:'Back to Review Center / 返回複習中心',en:'Tap Back to Review Center to return to your review list. / 點擊 Back to Review Center 回到複習清單。',npc:'Let’s go back! / 回去看看！',target:'#return-review-btn',delay:180},
+    {title:'Mastered / 已熟練',en:'You answered it correctly! Tap Mastered to see it here. / 你答對了！點擊 Mastered 查看題目。',npc:'Well done! / 做得好！',target:'#review [data-review-tab="mastered"]',delay:180},
+    {title:'Delete a Question / 刪除題目',en:'You can delete a question from the Mastered list. / 你可以在 Mastered 清單中刪除題目。',npc:'Only if you want to! / 需要時再刪除喔！',target:'#review .review-card[data-review-state="mastered"] .review-delete-button',delay:180},
+    {kind:'story',title:'Happy Baking! / 開心烘焙！',art:'🐰🐻🦊🧁✨',en:'Find the recipes and collect all 100 desserts. / 找回食譜，收集全部 100 種甜點吧！',zh:'',npc:'Let’s make magic! / 一起創造魔法！'}
+  ];
+  let tutorialIndex=0, tutorialWaiting=false, tutorialAdvanceOnReward=false;
+  function clearTutorialHighlight(){document.querySelectorAll('.tutorial-highlight').forEach(el=>el.classList.remove('tutorial-highlight'))}
+  function tutorialTarget(step){
+    if(!step.target)return null;
+    if(step.target==='CORRECT_ANSWER'){
+      // Match the exact answer only. A substring check can wrongly highlight
+      // distractors such as “going” when the answer is “go”.
+      const correct=[...document.querySelectorAll('#ingredients button')].find(b=>
+        b.dataset.correct==='true' || b.dataset.answer===currentQuestion?.verb ||
+        b.querySelector('.foodlabel')?.textContent.trim()===currentQuestion?.verb
+      );
+      return correct||null;
+    }
+    return document.querySelector(step.target);
+  }
+  function positionTutorialCard(step,target){
+    const card=document.querySelector('.tutorial-card');card.classList.remove('pos-tr','pos-tl','pos-br','pos-bl','story-page','answer-step');
+    if(step.kind==='story')card.classList.add('story-page');
+    if(step.target==='CORRECT_ANSWER'){
+      // Keep the answer choices fully visible by pinning the compact guide panel at the top.
+      card.classList.add('answer-step');
+    }else if(target){
+      const r=target.getBoundingClientRect();
+      const topHalf=r.top < window.innerHeight/2;
+      card.classList.add(topHalf?'pos-br':'pos-tr');
+    }else card.classList.add('pos-br');
+  }
+  function showTutorial(index){
+    tutorialIndex=index;
+    if(index===0)ensureReviewDemo(true);
+    // Seed the same real review example when the guide reaches Review Center.
+    if(tutorialSteps[index]?.target==='#review-btn'){
+      ensureReviewDemo();
+      currentReviewTab='notMastered';
+      renderReview();
+    }
+    const step=tutorialSteps[index];
+    document.body.classList.toggle('answer-guide-open',step.target==='CORRECT_ANSWER');
+    if(step.kind==='typingDemo'){
+      typingQuestion={before:'Yesterday, I ',after:' my room.',base:'clean',verb:'cleaned',explain:'Clean is a regular verb. Add -ed to make cleaned.'};
+      $('typing-count').textContent='Guide Demo';$('typing-question').innerHTML='Yesterday, I <span class="blank">___</span> my room. <span class="base-verb-cue">Base verb: clean</span>';
+      $('typing-answer').value='';$('typing-answer').disabled=false;$('typing-feedback').textContent='';
+      $('typing-form').hidden=false;$('typing-form').querySelector('button').hidden=false;$('typing-form').querySelector('button').disabled=false;$('typing-continue-btn').hidden=true;
+      switchScreen('typing');
+      setTimeout(()=>$('typing-answer').focus(),100);
+    }
+    clearTutorialHighlight();
+    const target=tutorialTarget(step);
+    const passiveHighlight=step.highlight?document.querySelector(step.highlight):null;
+    positionTutorialCard(step,target||passiveHighlight);
+    const bilingualCopy=(step.en||'').split(' / ');
+    const enCopy=bilingualCopy[0]||'';
+    const zhCopy=step.zh||bilingualCopy.slice(1).join(' / ')||'';
+    const importantButtons=['Beginner’s Guide',"Beginner's Guide",'Sound','Start Baking','Next Bake','Check Answer','Continue Baking','View Collection','Home','Learning Stats','Review Mistakes','Not Mastered','Show Answer','Practice Again','Back to Review Center','Mastered','Delete a Question','Skip Guide','Next','Finish'];
+    const escapeGuideText=value=>value.replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const highlightButtonNames=value=>{
+      let html=escapeGuideText(value).replace(/\*\*([^*]+)\*\*/g,'<span class="answer-highlight">$1</span>');
+      const labels=importantButtons.slice().sort((a,b)=>b.length-a.length).map(label=>label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+      const pattern=new RegExp('(?<![\\w])('+labels.join('|')+')(?![\\w])','g');
+      return html.replace(pattern,'<span class="tutorial-button-name">$1</span>');
+    };
+    $('tutorial-message').innerHTML=highlightButtonNames(enCopy)+(zhCopy?'<span class="tutorial-zh-line" lang="zh-Hant">'+highlightButtonNames(zhCopy)+'</span>':'');
+    $('tutorial-step').textContent=`${index+1} / ${tutorialSteps.length}`;
+    tutorialWaiting=!!target;
+    $('tutorial-next').style.display=step.target?'none':'';
+    $('tutorial-next').textContent=index===tutorialSteps.length-1?'Finish / 完成':'Next / 下一步';
+    $('tutorial-overlay').classList.add('show');
+    if(target||passiveHighlight){requestAnimationFrame(()=>{const t=target?tutorialTarget(step):(step.highlight?document.querySelector(step.highlight):null);if(t){t.classList.add('tutorial-highlight');}})}
+  }
+  function advanceTutorial(){if(tutorialIndex>=tutorialSteps.length-1){closeTutorial()}else{showTutorial(tutorialIndex+1)}}
+  function closeTutorial(){tutorialWaiting=false;clearTutorialHighlight();document.body.classList.remove('answer-guide-open');$('tutorial-next').style.display='';$('tutorial-overlay').classList.remove('show');try{localStorage.setItem('magicalBakeryGuideSeen','yes')}catch(e){}}
+  // Lock the game behind the guide: only the highlighted target and guide controls can be used.
+  // This prevents accidental navigation or gameplay while the learner is following the steps.
+  document.addEventListener('click',e=>{
+    if(!$('tutorial-overlay').classList.contains('show'))return;
+    const guideCard=e.target.closest('.tutorial-card');
+    if(guideCard)return; // Next and Skip remain available on informational pages.
+
+    const step=tutorialSteps[tutorialIndex],target=tutorialWaiting?tutorialTarget(step):null;
+    const clickedTarget=!!(target&&(e.target===target||target.contains(e.target)));
+    if(!clickedTarget){
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      return;
+    }
+
+    if(step.target==='#typing-continue-btn'){
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      switchScreen('baking');tutorialWaiting=false;clearTutorialHighlight();setTimeout(advanceTutorial,step.delay||180);return;
+    }
+    if(step.target==='#sound-btn'){
+      // Sound has a scripted on/off state per guide page; suppress the normal
+      // toggle listener so one tap always performs the requested action exactly once.
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      musicEnabled=step.soundAction==='on';
+      $('sound-btn').textContent=musicEnabled?'🔊 Sound On':'🔇 Sound Off';
+      $('sound-btn').setAttribute('aria-pressed',String(musicEnabled));
+      if(musicEnabled){ensureAudio();playClick();startAmbientMusic()}else{stopAmbientMusic()}
+      tutorialWaiting=false;clearTutorialHighlight();
+      setTimeout(advanceTutorial,step.delay||180);
+      return;
+    }
+    if(step.target==='#typing-answer'){
+      // Tapping the field only focuses it; advance after the learner types the
+      // demonstrated answer rather than treating the focus tap as completion.
+      return;
+    }
+    // Let the highlighted control's own click handler run. Previously the guide
+    // stopped propagation here, so Start Baking / Next Bake never opened a new
+    // question and the answer-highlighting step had no question to target.
+    tutorialWaiting=false;clearTutorialHighlight();
+    if(step.target==='CORRECT_ANSWER'){
+      // chooseAnswer() now runs normally; advance only after its reward is shown.
+      tutorialAdvanceOnReward=true;
+      return;
+    }
+    setTimeout(advanceTutorial,step.delay||180);
+  },true);
+  $('typing-answer').addEventListener('input',()=>{
+    if($('tutorial-overlay').classList.contains('show') && tutorialSteps[tutorialIndex]?.target==='#typing-answer' && $('typing-answer').value.trim().toLowerCase()==='cleaned'){
+      tutorialWaiting=false;clearTutorialHighlight();setTimeout(advanceTutorial,180);
+    }
+  });
+  $('tutorial-next').addEventListener('click',()=>{
+    const step=tutorialSteps[tutorialIndex];
+    if(!step.target)advanceTutorial();
+  });
+  $('tutorial-skip').addEventListener('click',closeTutorial);
+  $('guide-btn').addEventListener('click',()=>showTutorial(0));
+    $('start-btn').addEventListener('click',()=>{ensureAudio();startNextRound()});
+  $('review-btn').addEventListener('click',()=>{currentReviewTab='notMastered';renderReview();switchScreen('review')});
+  $('sound-btn').addEventListener('click',()=>{
+    musicEnabled=!musicEnabled;
+    $('sound-btn').textContent=musicEnabled?'🔊 Sound On':'🔇 Sound Off';
+    $('sound-btn').setAttribute('aria-pressed',String(musicEnabled));
+    if(musicEnabled){ensureAudio();playClick()}else{stopAmbientMusic()}
+  });
+  $('typing-form').addEventListener('submit',finishTypingChallenge);
+  $('bake-after-mistake-btn').addEventListener('click',()=>{if(reviewMode){renderReview();switchScreen('review');return;}$('bake-after-mistake-btn').hidden=true;bakeDessert();});
+  $('typing-continue-btn').addEventListener('click',()=>{if(currentReviewKey){currentReviewKey=null;renderReview();switchScreen('review');return;}questionsSinceTyping=0;$('typing-form').querySelector('button').disabled=false;startNextRound()});
+  $('typing-home-btn').addEventListener('click',()=>switchScreen('home'));
+  document.querySelectorAll('[data-review-tab]').forEach(btn=>btn.addEventListener('click',()=>{currentReviewTab=btn.dataset.reviewTab;renderReview();playClick()}));
+  document.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('#sound-btn')){ensureAudio();playClick()}});
+
+  $('collection-btn').addEventListener('click',()=>switchScreen('collection'));
+  $('progress-btn').addEventListener('click',()=>switchScreen('progress'));
+  $('next-btn').addEventListener('click',startNextRound);
+  $('return-review-btn').addEventListener('click',()=>{persist();returnToReviewAfterReward=false;$('return-review-btn').hidden=true;$('next-btn').hidden=false;currentReviewTab='notMastered';renderReview();switchScreen('review')});
+  $('view-btn').addEventListener('click',()=>switchScreen('collection'));
+  document.querySelectorAll('[data-screen]').forEach(btn=>btn.addEventListener('click',()=>switchScreen(btn.dataset.screen)));
+  document.querySelectorAll('#tabs .tab').forEach(btn=>btn.addEventListener('click',()=>renderCollection(btn.dataset.tier)));
+  $('reset-btn').addEventListener('click',showResetModal);
+  $('modal-cancel').addEventListener('click',()=>{$('modal').classList.remove('show');modalAction=null});
+  $('modal-confirm').addEventListener('click',()=>{if(modalAction){const action=modalAction;modalAction=null;action()}else{$('modal').classList.remove('show')}});
+  // Initial screen data
+  renderCollection('Common');updateProgress();
+  try{if(localStorage.getItem('magicalBakeryGuideSeen')!=='yes'){showTutorial(0)}}catch(e){showTutorial(0)}
+  return {startNextRound,switchScreen,renderCollection,updateProgress};
+})();
+</script>
+</body>
+</html>
